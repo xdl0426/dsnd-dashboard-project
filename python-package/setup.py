@@ -6,10 +6,10 @@ requirements = (cwd / 'employee_events' / 'requirements.txt').read_text().split(
 
 setup_args = dict(
     name='employee_events',
-    version='0.0',
+    version='1.0',
     description='SQL Query API',
     packages=find_packages(),
-    package_data={'': ['employee_events.db', 'requirements.txt']},
+    package_data={'employee_events': ['employee_events.db', 'requirements.txt']},
     install_requirements=requirements,
     )
 
