@@ -1,100 +1,57 @@
+import builtins
+from typing import Any
+
+# Compatibility for older FastHTML versions on newer Python environments.
+builtins.Any = Any
+
 from fasthtml.common import *
+import fasthtml.core as fasthtml_core
+from fastcore.xml import to_xml
+
 import os
 import sys
 import matplotlib.pyplot as plt
-#from fastcore.xml import FT
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Add the project root to Python's module search path
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..")
+)
+
 if PROJECT_ROOT not in sys.path:
-     sys.path.insert(0, PROJECT_ROOT)
+    sys.path.insert(0, PROJECT_ROOT)
 
-#Import QueryBase, Employee, Team from employee_events
+
+# Import QueryBase, Employee, and Team from employee_events
 from employee_events.query_base import QueryBase
 from employee_events.employee import Employee
 from employee_events.team import Team
 
-#import the load_model function from the utils.py file
+
+# Import the load_model function from utils.py
 from utils import load_model
 
 
-# def _normalize_render_children(items):
-#     """Keep only valid FastHTML children and drop None/bool placeholders."""
-#     normalized = []
-#     for item in items:
-#         if item is None or isinstance(item, bool):
-#             continue
-#         if isinstance(item, (list, tuple)):
-#             normalized.extend(_normalize_render_children(item))
-#         else:
-#             normalized.append(item)
-#     return normalized
+"""
+Compatibility adapter for python-fasthtml 0.8.0 and newer fastcore.
+
+FastHTML 0.8.0 passes `indent` as a positional argument to to_xml().
+Newer fastcore versions interpret that value as another HTML element,
+which causes:
+TypeError: sequence item 1: expected str instance, bool found
+"""
+def compatible_to_xml(req, resp, indent):
+    resp = fasthtml_core._apply_ft(resp)
+    fasthtml_core._find_targets(req, resp)
+
+    return to_xml(
+        resp,
+        indent=indent
+    )
 
 
-# # Runtime compatibility patch: keep the custom project files untouched,
-# # but ensure FastHTML only receives valid node children and safe attributes.
-# def _patch_dashboard_rendering():
-#     from base_components import Dropdown, Radio
-#     from combined_components import CombinedComponent
-
-#     def safe_call_children(self, userid, model):
-#         called = []
-#         for child in getattr(self, 'children', []):
-#             if child is None or isinstance(child, bool):
-#                 continue
-
-#             if isinstance(child, FT):
-#                 rendered = child()
-#             elif callable(child):
-#                 try:
-#                     rendered = child(userid, model)
-#                 except TypeError:
-#                     rendered = child()
-#             else:
-#                 rendered = child
-
-#             if rendered is None or isinstance(rendered, bool):
-#                 continue
-#             if isinstance(rendered, (list, tuple)):
-#                 called.extend(_normalize_render_children(rendered))
-#             else:
-#                 called.append(rendered)
-
-#         return called
-
-#     def safe_radio_build(self, entity_id, model):
-#         children = []
-#         selected_name = getattr(model, 'name', '').title()
-#         for value in self.values:
-#             input_child = Input(
-#                 type='radio',
-#                 id=value.lower(),
-#                 name=self.name,
-#                 value=value,
-#                 hx_get=self.hx_get,
-#                 hx_target=self.hx_target,
-#                 checked='checked' if value == selected_name else None,
-#             )
-#             label_child = Label(value, _for=value.lower())
-#             children.extend([input_child, label_child])
-#         return children
-
-#     def safe_dropdown_build(self, entity_id, model):
-#         options = []
-#         for text, value in self.component_data(entity_id, model):
-#             option = Option(
-#                 text,
-#                 value=value,
-#                 selected='selected' if str(value) == str(entity_id) else None,
-#             )
-#             options.append(option)
-#         return Select(*options, name=self.name)
-
-#     CombinedComponent.call_children = safe_call_children
-#     Radio.build_component = safe_radio_build
-#     Dropdown.build_component = safe_dropdown_build
-
-
-# _patch_dashboard_rendering()
+# Apply the compatibility adapter without changing package source files
+fasthtml_core._to_xml = compatible_to_xml
 
 """
 Below, we import the parent classes
@@ -346,8 +303,8 @@ class Report(CombinedComponent):
         )
 
 # Initialize a fasthtml app 
-#app, rt = fast_app()
-app, rt = fast_app(debug=True)
+app, rt = fast_app()
+
 
 # Initialize the `Report` class
 report = Report()
@@ -418,7 +375,6 @@ async def update_data(r):
         return RedirectResponse(f"/employee/{id}", status_code=303)
     elif profile_type == 'Team':
         return RedirectResponse(f"/team/{id}", status_code=303)
-    
 
-if __name__ == "__main__":
+if __name__ =="__main__":
     serve()

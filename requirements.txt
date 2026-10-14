@@ -1,5 +1,7 @@
 scikit-learn==1.5.2
-python-fasthtml==0.8.0
+python-fasthtml==0.10.3
+fastcore==1.7.19
+starlette==0.38.6
 matplotlib==3.9.2
 scipy==1.14.1
 numpy==2.1.2
@@ -7,5 +9,4 @@ pandas==2.2.3
 pytest
 flake8
 ipython
-sqlite-minutils
 -e ./python-package
